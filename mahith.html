@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Clock (Unicode Flags)</title>
+    
+    <style>
+
+        :root {
+            --color-primary: #007bff; /* Bright Blue */
+            --color-secondary: #28a745; /* Green */
+            --color-text-dark: #343a40;
+            --color-text-light: #09db25;
+            --color-background: #e9ecef; /* Light Grey Background */
+            --color-container: #d0cae1ca; /* White Container Background */
+            --color-card: #dc7019ab; /* Off-white card background */
+            --shadow-subtle: 0 4px 10px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: url(flgs.jpg);
+            margin: 0;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .world-clock-container {
+            max-width: 1600px;
+            width: 100%;
+            padding: 40px;
+            background-color: var(--color-container);
+            border-radius: 15px;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--color-primary);
+            margin-bottom: 40px;
+            font-weight: 800;
+            font-size: 3em;
+            letter-spacing: 1px;
+            border-bottom: 3px solid var(--color-secondary);
+            padding-bottom: 10px;
+        }
+
+        .clocks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .clock-card {
+            background-color: var(--color-card);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+            border-bottom: 5px solid var(--color-primary);
+            transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+        }
+
+        .clock-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-hover);
+            border-bottom-color: var(--color-secondary);
+        }
+
+        .city-name {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 3px;
+            color: var(--color-text-dark);
+        }
+
+        .country-name {
+            font-size: 1.1em;
+            color: #6c757d;
+            margin-bottom: 20px;
+            font-style: italic;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .country-name .flag {
+            font-size: 1.2em;
+            margin-right: 8px;
+        }
+
+        .time-display {
+            font-size: 3.2em;
+            font-weight: 900;
+            color: var(--color-primary); 
+            letter-spacing: 2px;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .date-display {
+            font-size: 1.1em;
+            color: var(--color-text-dark);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="world-clock-container">
+        <h1>🌎 GLOBAL TIME TRACKER  🌍</h1>
+        <div id="clocks-container" class="clocks-grid">
+        </div>
+    </div>
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // Map of Country Names to Emoji Flags using Unicode Escape Sequences (Code Points)
+            const countryToFlag = {
+                "India": "\u{1F1EE}\u{1F1F3}",          // 🇮🇳
+                "Fiji": "\u{1F1EB}\u{1F1EF}",           // 🇫🇯
+                "New Zealand": "\u{1F1F3}\u{1F1FF}",    // 🇳🇿
+                "Australia": "\u{1F1E6}\u{1F1FA}",      // 🇦🇺
+                "Japan": "\u{1F1EF}\u{1F1F5}",          // 🇯🇵
+                "South Korea": "\u{1F1F0}\u{1F1F7}",    // 🇰🇷
+                "China": "\u{1F1E8}\u{1F1F3}",          // 🇨🇳
+                "Singapore": "\u{1F1F8}\u{1F1EC}",      // 🇸🇬
+                "Indonesia": "\u{1F1EE}\u{1F1E9}",      // 🇮🇩
+                "Thailand": "\u{1F1F9}\u{1F1ED}",       // 🇹🇭
+                "Pakistan": "\u{1F1F5}\u{1F1F0}",       // 🇵🇰
+                "UAE": "\u{1F1E6}\u{1F1EA}",            // 🇦🇪
+                "Saudi Arabia": "\u{1F1F8}\u{1F1E6}",   // 🇸🇦
+                "Kenya": "\u{1F1F0}\u{1F1EA}",          // 🇰🇪
+                "Egypt": "\u{1F1EA}\u{1F1EC}",          // 🇪🇬
+                "South Africa": "\u{1F1FF}\u{1F1E6}",    // 🇿🇦
+                "Nigeria": "\u{1F1F3}\u{1F1EC}",        // 🇳🇬
+                "Ghana": "\u{1F1EC}\u{1F1ED}",          // 🇬🇭
+                "Russia": "\u{1F1F7}\u{1F1FA}",         // 🇷🇺
+                "Ukraine": "\u{1F1FA}\u{1F1E6}",        // 🇺🇦
+                "Greece": "\u{1F1EC}\u{1F1F7}",         // 🇬🇷
+                "Germany": "\u{1F1E9}\u{1F1EA}",        // 🇩🇪
+                "France": "\u{1F1EB}\u{1F1F7}",         // 🇫🇷
+                "United Kingdom": "\u{1F1EC}\u{1F1E7}", // 🇬🇧
+                "Portugal": "\u{1F1F5}\u{1F1F9}",       // 🇵🇹
+                "Brazil": "\u{1F1E7}\u{1F1F7}",         // 🇧🇷
+                "Argentina": "\u{1F1E6}\u{1F1F7}",      // 🇦🇷
+                "Chile": "\u{1F1E8}\u{1F1F1}",          // 🇨🇱
+                "Peru": "\u{1F1F5}\u{1F1EA}",           // 🇵🇪
+                "Colombia": "\u{1F1E8}\u{1F1F4}",       // 🇨🇴
+                "USA": "\u{1F1FA}\u{1F1F8}",            // 🇺🇸
+                "Canada": "\u{1F1E8}\u{1F1E6}",         // 🇨🇦
+                "Mexico": "\u{1F1F2}\u{1F1FD}",         // 🇲🇽
+                "Philippines": "\u{1F1F5}\u{1F1ED}",    // 🇵🇭
+                "Nepal": "\u{1F1F3}\u{1F1F5}",          // 🇳🇵
+                "Iran": "\u{1F1EE}\u{1F1F7}",           // 🇮🇷
+                "Senegal": "\u{1F1F8}\u{1F1F3}",        // 🇸🇳
+                "Puerto Rico": "\u{1F1F5}\u{1F1F7}",    // 🇵🇷
+                "Venezuela": "\u{1F1FB}\u{1F1EA}",      // 🇻🇪
+            };
+
+            // Function to get the flag emoji, or a placeholder if not found
+            function getFlag(country) {
+                // The JavaScript engine correctly processes the Unicode escapes into emojis
+                return countryToFlag[country] || ""; 
+            }
+
+            // Expanded list covering all major UTC offsets and regions globally.
+            const timeZones = [
+                // 🇮🇳 PRIORITY ZONE 🇮🇳
+                { city: "New Delhi", country: "India", zone: "Asia/Kolkata" }, // UTC+5:30
+                
+                // === NEW ADDITIONS (12 Zones) ===
+                { city: "Shanghai", country: "China", zone: "Asia/Shanghai" }, // UTC+8 
+                { city: "Manila", country: "Philippines", zone: "Asia/Manila" }, // UTC+8
+                { city: "Kathmandu", country: "Nepal", zone: "Asia/Kathmandu" }, // UTC+5:45 (Unique quarter-hour offset)
+                { city: "Tehran", country: "Iran", zone: "Asia/Tehran" }, // UTC+3:30 (Unique half-hour offset)
+                { city: "Dakar", country: "Senegal", zone: "Africa/Dakar" }, // UTC+0
+                { city: "San Juan", country: "Puerto Rico", zone: "America/Puerto_Rico" }, // UTC-4
+                { city: "Halifax", country: "Canada", zone: "America/Halifax" }, // UTC-4 (Atlantic Time)
+                { city: "Auckland", country: "New Zealand", zone: "Pacific/Auckland" }, // UTC+12 
+                { city: "Adelaide", country: "Australia", zone: "Australia/Adelaide" }, // UTC+9:30 (Unique half-hour offset)
+                { city: "Caracas", country: "Venezuela", zone: "America/Caracas" }, // UTC-4 
+                { city: "Anchorage", country: "USA", zone: "America/Anchorage" }, // UTC-9
+                { city: "Midway Atoll", country: "USA", zone: "Pacific/Midway" }, // UTC-11 (Furthest west)
+
+                // === ASIA/PACIFIC (Original set + sorting for flow) ===
+                { city: "Fiji", country: "Fiji", zone: "Pacific/Fiji" }, // UTC+12
+                { city: "Wellington", country: "New Zealand", zone: "Pacific/Auckland" }, // UTC+12
+                { city: "Sydney", country: "Australia", zone: "Australia/Sydney" }, // UTC+10
+                { city: "Brisbane", country: "Australia", zone: "Australia/Brisbane" }, // UTC+10 (No DST)
+                { city: "Tokyo", country: "Japan", zone: "Asia/Tokyo" }, // UTC+9
+                { city: "Seoul", country: "South Korea", zone: "Asia/Seoul" }, // UTC+9
+                { city: "Beijing", country: "China", zone: "Asia/Shanghai" }, // UTC+8
+                { city: "Singapore", country: "Singapore", zone: "Asia/Singapore" }, // UTC+8
+                { city: "Perth", country: "Australia", zone: "Australia/Perth" }, // UTC+8
+                { city: "Jakarta", country: "Indonesia", zone: "Asia/Jakarta" }, // UTC+7
+                { city: "Bangkok", country: "Thailand", zone: "Asia/Bangkok" }, // UTC+7
+                { city: "Karachi", country: "Pakistan", zone: "Asia/Karachi" }, // UTC+5
+
+                // === MIDDLE EAST & AFRICA ===
+                { city: "Dubai", country: "UAE", zone: "Asia/Dubai" }, // UTC+4
+                { city: "Riyadh", country: "Saudi Arabia", zone: "Asia/Riyadh" }, // UTC+3
+                { city: "Nairobi", country: "Kenya", zone: "Africa/Nairobi" }, // UTC+3
+                { city: "Cairo", country: "Egypt", zone: "Africa/Cairo" }, // UTC+2
+                { city: "Johannesburg", country: "South Africa", zone: "Africa/Johannesburg" }, // UTC+2
+                { city: "Lagos", country: "Nigeria", zone: "Africa/Lagos" }, // UTC+1
+                { city: "Accra", country: "Ghana", zone: "Africa/Accra" }, // UTC+0
+
+                // === EUROPE ===
+                { city: "Moscow", country: "Russia", zone: "Europe/Moscow" }, // UTC+3
+                { city: "Kyiv", country: "Ukraine", zone: "Europe/Kyiv" }, // UTC+2
+                { city: "Athens", country: "Greece", zone: "Europe/Athens" }, // UTC+2
+                { city: "Berlin", country: "Germany", zone: "Europe/Berlin" }, // UTC+1
+                { city: "Paris", country: "France", zone: "Europe/Paris" }, // UTC+1
+                { city: "London", country: "United Kingdom", zone: "Europe/London" }, // UTC+0 / BST
+                { city: "Lisbon", country: "Portugal", zone: "Europe/Lisbon" }, // UTC+0
+
+                // === SOUTH AMERICA ===
+                { city: "Rio de Janeiro", country: "Brazil", zone: "America/Sao_Paulo" }, // UTC-3
+                { city: "Buenos Aires", country: "Argentina", zone: "America/Argentina/Buenos_Aires" }, // UTC-3
+                { city: "Santiago", country: "Chile", zone: "America/Santiago" }, // UTC-4
+                { city: "Lima", country: "Peru", zone: "America/Lima" }, // UTC-5 
+                { city: "Bogota", country: "Colombia", zone: "America/Bogota" }, // UTC-5
+
+                // === NORTH AMERICA ===
+                { city: "New York", country: "USA", zone: "America/New_York" }, // UTC-5 / EST
+                { city: "Toronto", country: "Canada", zone: "America/Toronto" }, // UTC-5 / EST
+                { city: "Mexico City", country: "Mexico", zone: "America/Mexico_City" }, // UTC-6 
+                { city: "Chicago", country: "USA", zone: "America/Chicago" }, // UTC-6 / CST
+                { city: "Denver", country: "USA", zone: "America/Denver" }, // UTC-7 / MST
+                { city: "Vancouver", country: "Canada", zone: "America/Vancouver" }, // UTC-8 
+                { city: "Los Angeles", country: "USA", zone: "America/Los_Angeles" }, // UTC-8 / PST
+                { city: "Hawaii", country: "USA", zone: "Pacific/Honolulu" } // UTC-10 / HST
+            ];
+
+            const clocksContainer = document.getElementById('clocks-container');
+
+            // 1. Initialize the clock cards in the HTML
+            timeZones.forEach(tz => {
+                const clockCard = document.createElement('div');
+                clockCard.classList.add('clock-card');
+                
+                const safeZoneId = tz.zone.replace(/\//g, '-');
+                
+                // Get the flag emoji, which is defined as a Unicode escape sequence
+                const flagEmoji = getFlag(tz.country);
+
+                clockCard.innerHTML = `
+                    <div class="city-name">${tz.city}</div>
+                    <div class="country-name"><span class="flag">${flagEmoji}</span>${tz.country}</div>
+                    <div class="time-display" id="time-${safeZoneId}">--:--:--</div>
+                    <div class="date-display" id="date-${safeZoneId}">---</div>
+                `;
+                clocksContainer.appendChild(clockCard);
+            });
+
+            // 2. Function to fetch and display the time for a specific zone
+            function updateClock(timeZone) {
+                const now = new Date();
+                const safeZoneId = timeZone.replace(/\//g, '-');
+                
+                const timeElement = document.getElementById(`time-${safeZoneId}`);
+                const dateElement = document.getElementById(`date-${safeZoneId}`);
+
+                if (!timeElement || !dateElement) return;
+
+                const timeOptions = {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false,
+                    timeZone: timeZone
+                };
+
+                const dateOptions = {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    timeZone: timeZone
+                };
+
+                try {
+                    const timeString = now.toLocaleString('en-US', timeOptions);
+                    const dateString = now.toLocaleString('en-US', dateOptions);
+
+                    timeElement.textContent = timeString;
+                    dateElement.textContent = dateString;
+                } catch (error) {
+                    console.error(`Error updating clock for ${timeZone}:`, error);
+                    timeElement.textContent = 'Error';
+                    dateElement.textContent = 'Date Error';
+                }
+            }
+
+            // 3. Main function to update all clocks in the list
+            function updateAllClocks() {
+                timeZones.forEach(tz => {
+                    updateClock(tz.zone);
+                });
+            }
+
+            // Initial call and then set the interval
+            updateAllClocks();
+            setInterval(updateAllClocks, 1000);
+        });
+    </script>
+</body>
+</html>
